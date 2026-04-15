@@ -253,7 +253,7 @@ func (s *StateMachine[D]) SetCurrentState(state gen.Atom) error {
 		// touch it. Otherwise we should cancel the active state timeout if there
 		// is one.
 		if s.hasActiveStateTimeout() && s.stateTimeout.state != state {
-			s.Log().Warning("StateMachine: canceling state timeout due to state transition", "fromState", oldState, "toState", state, "timeoutState", s.stateTimeout.state, "timeoutMessage", reflect.TypeOf(s.stateTimeout.timeout.Message).String())
+			s.Log().Debug("StateMachine: canceling state timeout due to state transition", "fromState", oldState, "toState", state, "timeoutState", s.stateTimeout.state, "timeoutMessage", reflect.TypeOf(s.stateTimeout.timeout.Message).String())
 			s.stateTimeout.cancel()
 			s.stateTimeout.canceled = true
 		}
@@ -569,7 +569,7 @@ func (s *StateMachine[D]) ProcessActions(actions []Action, state gen.Atom) {
 		switch action := action.(type) {
 		case StateTimeout:
 			if s.hasActiveStateTimeout() {
-				s.Log().Warning("StateMachine: replacing active state timeout", "currentState", s.currentState, "oldTimeoutState", s.stateTimeout.state, "oldTimeoutMessage", reflect.TypeOf(s.stateTimeout.timeout.Message).String(), "newTimeoutMessage", reflect.TypeOf(action.Message).String())
+				s.Log().Debug("StateMachine: replacing active state timeout", "currentState", s.currentState, "oldTimeoutState", s.stateTimeout.state, "oldTimeoutMessage", reflect.TypeOf(s.stateTimeout.timeout.Message).String(), "newTimeoutMessage", reflect.TypeOf(action.Message).String())
 				s.stateTimeout.cancel()
 				s.stateTimeout.canceled = true
 			}
@@ -591,7 +591,7 @@ func (s *StateMachine[D]) ProcessActions(actions []Action, state gen.Atom) {
 				generation: generation,
 				cancel:     func() { cancelFunc() },
 			}
-			s.Log().Warning("StateMachine: scheduled state timeout", "state", state, "message", reflect.TypeOf(action.Message).String(), "duration", action.Duration)
+			s.Log().Debug("StateMachine: scheduled state timeout", "state", state, "message", reflect.TypeOf(action.Message).String(), "duration", action.Duration)
 		case GenericTimeout:
 			if s.hasActiveGenericTimeout(action.Name) {
 				s.genericTimeouts[action.Name].cancel()
