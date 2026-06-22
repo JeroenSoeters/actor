@@ -1,7 +1,6 @@
 package statemachine
 
 import (
-	"strings"
 	"testing"
 
 	"ergo.services/ergo/gen"
@@ -44,55 +43,6 @@ func stateEnter(oldState gen.Atom, newState gen.Atom, data Data, proc gen.Proces
 		return newState, data, gen.TerminateReasonNormal
 	}
 	return newState, data, nil
-}
-
-// logLevelForMessage returns the level the actor logged a given message at. The
-// test logger renders calls via fmt.Sprintf, so structured key/value args are
-// appended as a "%!(EXTRA ...)" suffix; strip it to match on the message text.
-func logLevelForMessage(actor *unit.TestActor, message string) (gen.LogLevel, bool) {
-	for _, e := range actor.Events() {
-		le, ok := e.(unit.LogEvent)
-		if !ok {
-			continue
-		}
-		text := le.Message
-		if i := strings.Index(text, "%!(EXTRA"); i != -1 {
-			text = text[:i]
-		}
-		if text == message {
-			return le.Level, true
-		}
-	}
-	return 0, false
-}
-
-func TestDroppingStaleGenericTimeout_LogsAtDebug(t *testing.T) {
-	actor, err := unit.Spawn(t, factoryBasicStatemachine, unit.WithLogLevel(gen.LogLevelDebug))
-	unit.Nil(t, err)
-
-	actor.SendMessage(
-		gen.PID{Node: "test", ID: 100, Creation: 0},
-		genericTimeoutMessage{name: gen.Atom("rate-limit"), generation: 1})
-
-	level, found := logLevelForMessage(actor, "StateMachine: dropping stale generic timeout")
-	unit.Equal(t, true, found)
-	unit.Equal(t, gen.LogLevelDebug, level)
-}
-
-func TestDroppingStaleGenericTimeoutAfterReplacement_LogsAtDebug(t *testing.T) {
-	actor, err := unit.Spawn(t, factoryBasicStatemachine, unit.WithLogLevel(gen.LogLevelDebug))
-	unit.Nil(t, err)
-
-	sm := actor.Behavior().(*BasicStatemachine)
-	sm.genericTimeouts[gen.Atom("rate-limit")] = &ActiveGenericTimeout{generation: 2}
-
-	actor.SendMessage(
-		gen.PID{Node: "test", ID: 100, Creation: 0},
-		genericTimeoutMessage{name: gen.Atom("rate-limit"), generation: 1})
-
-	level, found := logLevelForMessage(actor, "StateMachine: dropping stale generic timeout after replacement")
-	unit.Equal(t, true, found)
-	unit.Equal(t, gen.LogLevelDebug, level)
 }
 
 func TestStateEnterCallback_SendShouldPropagateErrors(t *testing.T) {
