@@ -421,12 +421,12 @@ func (s *StateMachine[D]) ProcessRun() (rr error) {
 			}
 			if timeoutMsg, ok := message.Message.(genericTimeoutMessage); ok {
 				if !s.hasActiveGenericTimeout(timeoutMsg.name) {
-					s.Log().Warning("StateMachine: dropping stale generic timeout", "name", timeoutMsg.name, "messageGeneration", timeoutMsg.generation, "currentState", s.currentState)
+					s.Log().Debug("StateMachine: dropping stale generic timeout", "name", timeoutMsg.name, "messageGeneration", timeoutMsg.generation, "currentState", s.currentState)
 					return nil
 				}
 				active := s.genericTimeouts[timeoutMsg.name]
 				if active.generation != timeoutMsg.generation {
-					s.Log().Warning("StateMachine: dropping stale generic timeout after replacement", "name", timeoutMsg.name, "messageGeneration", timeoutMsg.generation, "activeGeneration", active.generation, "currentState", s.currentState)
+					s.Log().Debug("StateMachine: dropping stale generic timeout after replacement", "name", timeoutMsg.name, "messageGeneration", timeoutMsg.generation, "activeGeneration", active.generation, "currentState", s.currentState)
 					return nil
 				}
 				message.Message = timeoutMsg.payload
